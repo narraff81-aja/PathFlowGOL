@@ -1,0 +1,13 @@
+#@PathFlowGOL_HostAddress = http://localhost:5294
+@PathFlowGOL_HostAddress = https://localhost:7137
+
+## --- TEST LOGIN ---
+# POST {{PathFlowGOL_HostAddress}}/api/auth/login
+# Content-Type: application/json
+
+# {
+#   "username": "Admin123",
+#   "password": "Admin123"
+# }
+
+###
