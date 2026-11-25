@@ -9,6 +9,8 @@
   <ItemGroup>
     <Folder Include="Docs\" />
     <Folder Include="Database\" />
+    <Folder Include="Controllers\" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>

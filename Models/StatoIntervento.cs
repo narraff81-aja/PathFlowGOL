@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PathFlowGOL.Models;
 /// <summary>
-/// tabella di supporto
+/// Tabella di lookup
 /// </summary>
 public class StatoIntervento {
     [Key]

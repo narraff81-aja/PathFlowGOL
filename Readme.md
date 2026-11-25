@@ -1,10 +1,13 @@
-# PathFlowGOL (v0.1.0)
+# PathFlowGOL
 
 **Descrizione:** Sistema gestionale backend sviluppato in **ASP.NET Core** per il supporto operativo agli **OMLS** (Operatori del Mercato del Lavoro e dei Servizi) nell'ambito del **Programma GOL** (*Garanzia di Occupabilità dei Lavoratori*).
 
-**Versione:** v0.1.0
+**Versione:** v0.2.0
 
-**Stato del progetto:** Primo rilascio strutturale (*Data Layer & Domain Modeling*). Include le entità del dominio, la configurazione di Entity Framework Core con Migrations per MySQL, lo script SQL di popolamento iniziale (`seed.sql`) e il diagramma Entità-Relazione.
+**Stato del progetto:** 
+* **Autenticazione e Gestione Sessione (`AuthController`):** Login tramite Cookie Authentication con emissione dei claim di ruolo, logout e invalidazione della sessione al cambio password.
+* **Tabelle di Lookup / Anagrafiche di Base:** Espozione degli endpoint REST (con relativi DTO e Service) per la gestione e consultazione delle tabelle di supporto (`TitoliStudio`, `TipiBenefici`, `LavoriObiettivo`, `StatiIntervento`).
+
 
 ---
 
@@ -22,13 +25,16 @@ PathFlowGOL nasce per modellare e supportare i flussi operativi del Programma GO
 
 ---
 
-## Struttura del Repository (`v0.1.0`)
+## Struttura del Repository (`v0.2.0`)
 
 * `Models/` – Entità del dominio (`Utente`, `ProfiloOperatore`, `Cittadino`, `GestionePatto`, `Appuntamento`, `ChecklistDocumentale`, `FAQ`, `Logging` e tabelle di lookup)
 * `Data/` – `AppDbContext`, configurazioni Fluent API, indici univoci e `ValueConverter`
 * `Migrations/` – Migrazioni Entity Framework Core per la generazione dello schema relazionale
 * `Database/` – Script SQL di popolamento iniziale (`seed.sql`)
-* `Docs/` – Diagramma Entità-Relazione del database (`ER-Diagram.png`)
+* `Docs/` – Diagramma Entità-Relazione del database (`ER-Diagram.jpg`) e foglio di calcolo con la matrice dei permessi RBAC (`Permessi_RBAC.xlsx`)
+* `DTOs/` – Oggetti di trasferimento dati per input/output e validazione dati
+* `Services/` – Logica applicativa e regole di autorizzazione/business
+* `Controllers/` – Endpoint REST API
 
 ---
 
@@ -39,7 +45,10 @@ Il database separa l'identità di accesso (**`Utenti`**) dall'anagrafica operati
 * La rimozione di un account `Utente` preserva lo storico operativo (`GestionePatti`, `Appuntamenti`, `FAQs`) collegato al relativo `ProfiloOperatore`.
 * L'utenza `SuperAdmin` iniziale (`Admin123`) dispone di un profilo dedicato per mantenere coerente l'integrità delle chiavi esterne sulle tabelle operative.
 
-Il diagramma completo delle relazioni è disponibile in [`Docs/ER-Diagram.png`](Docs/ER-Diagram.png).
+La documentazione di riferimento è disponibile nella cartella [`Docs/`](Docs/):
+
+* **Modello Entità-Relazione:** [`Docs/ER-Diagram.jpg`](Docs/ER-Diagram.jpg)
+* **Matrice Permessi RBAC:** [`Docs/Permessi_RBAC.xlsx`](Docs/Permessi_RBAC.xlsx)
 
 ---
 
@@ -82,10 +91,10 @@ SuperAdmin: `Admin123` / `Admin123`
 
 ---
 
-## Prossimi Sviluppi (`v0.2.0`)
+## Prossimi Sviluppi (`v0.3.0`)
 
-Nel prossimo rilascio verranno reintegrati e completati i livelli applicativi (`DTOs`, `Services`, `Controllers`) per le prime aree funzionali:
+Nel prossimo rilascio verranno reintegrati e completati i livelli applicativi (`DTOs`, `Services`, `Controllers`) e l'aggiornamento della matrice permessi per le aree successive:
 
-* **Autenticazione e Gestione Sessione (`AuthController`):** Login tramite Cookie Authentication con emissione dei claim di ruolo, logout e invalidazione della sessione al cambio password.
-* **Tabelle di Lookup / Anagrafiche di Base:** Espozione degli endpoint REST (con relativi DTO e Service) per la gestione e consultazione delle tabelle di supporto (`TitoliStudio`, `TipiBenefici`, `LavoriObiettivo`, `StatiIntervento`).
+* **Gestione Utenti e Profili Operatore:** Endpoint per amministrazione utenze, creazione/associazione `ProfiloOperatore` e allineamento dei controlli di accesso.
 
+* **Moduli Operativi e Knowledge Base:** Avvio dell'implementazione dei moduli per `Cittadini`, `GestionePatti`, `ChecklistDocumentale`, `Appuntamenti` e `FAQs`.
