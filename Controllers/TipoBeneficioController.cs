@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using PathFlowGOL.Models;
 using PathFlowGOL.Services;
 using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
 
 namespace PathFlowGOL.Controllers;
 
@@ -20,23 +19,24 @@ public class TipoBeneficioController : ControllerBase {
     [HttpGet]
     public async Task<IActionResult> GetAll() {
         var benefici = await _service.GetAllAsync();
-        return Ok(benefici);
+        if (!benefici.Successo)
+            return StatusCode(benefici.StatusCode, new { message = benefici.MsgErrore });
+
+        return Ok(benefici.Data);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id) {
         var beneficio = await _service.GetByIdAsync(id);
-        if (beneficio == null) return NotFound(new { message = "TipoBeneficio non trovato." });
-        return Ok(beneficio);
+        if (!beneficio.Successo)
+            return StatusCode(beneficio.StatusCode, new { message = beneficio.MsgErrore });
+
+        return Ok(beneficio.Data);
     }
 
     [HttpPost]
     [Authorize(Roles = $"{nameof(RuoloUtente.SuperAdmin)},{nameof(RuoloUtente.Admin)}")] // Solo Admin e SuperAdmin possono scrivere
     public async Task<IActionResult> Create([FromBody, Required, MaxLength(60)] string beneficio) {
-        if (!TryGetCurrentUser(out var ruolo)) {
-            return Unauthorized();
-        }
-
         if (string.IsNullOrWhiteSpace(beneficio))
             return BadRequest(new { message = "Il beneficio non può essere vuoto." });
 
@@ -50,10 +50,6 @@ public class TipoBeneficioController : ControllerBase {
     [HttpPut("{id}")]
     [Authorize(Roles = $"{nameof(RuoloUtente.SuperAdmin)},{nameof(RuoloUtente.Admin)}")]
     public async Task<IActionResult> Update(int id, [FromBody, Required, MaxLength(60)] string beneficio) {
-        if (!TryGetCurrentUser(out var ruolo)) {
-            return Unauthorized();
-        }
-
         if (string.IsNullOrWhiteSpace(beneficio))
             return BadRequest(new { message = "Il beneficio non può essere vuoto." });
 
@@ -66,21 +62,11 @@ public class TipoBeneficioController : ControllerBase {
     [HttpDelete("{id}")]
     [Authorize(Roles = $"{nameof(RuoloUtente.SuperAdmin)},{nameof(RuoloUtente.Admin)}")]
     public async Task<IActionResult> Delete(int id) {
-        if (!TryGetCurrentUser(out var ruolo)) {
-            return Unauthorized();
-        }
-
         var result = await _service.DeleteAsync(id);
         if (!result.Successo) {
             return StatusCode(result.StatusCode, new { message = result.MsgErrore });
         }
-        return Ok("TipoBeneficio eliminato con successo.");
-    }
-
-    private bool TryGetCurrentUser(out RuoloUtente ruolo) {
-        ruolo = RuoloUtente.Operatore;
-        var roleClaim = User.FindFirstValue(ClaimTypes.Role);
-        return Enum.TryParse<RuoloUtente>(roleClaim, out ruolo);
+        return Ok(new { message = "TipoBeneficio eliminato con successo." });
     }
 }
 

@@ -30,7 +30,7 @@ public class TitoloStudioService : ITitoloStudioService {
     .AsNoTracking()
     .FirstOrDefaultAsync(i => i.Id == id);
         if (titStudio is null) {
-            return ServiceResult<TitoloStudioReadDTO>.Fail("TitoloStudio non trovato.", 404);
+            return ServiceResult<TitoloStudioReadDTO>.Fail("TitoloStudio non trovato con quell'id.", 404);
         }
         return ServiceResult<TitoloStudioReadDTO>.Ok(new TitoloStudioReadDTO {
             Id = titStudio.Id,
@@ -62,6 +62,11 @@ public class TitoloStudioService : ITitoloStudioService {
     }
 
     public async Task<ServiceResult<TitoloStudioReadDTO>> UpdateAsync(int id, string denominazione) {
+        var titStudio = await _context.TitoliStudio.FindAsync(id);
+        if (titStudio is null) {
+            return ServiceResult<TitoloStudioReadDTO>.Fail("TitoloStudio non trovato con quell'id.", 404);
+        }
+
         // Blocco per mantenere UNIQUE
         var testoPulito = denominazione.Trim();
         bool esisteGia = await _context.TitoliStudio
@@ -70,19 +75,15 @@ public class TitoloStudioService : ITitoloStudioService {
         if (esisteGia) {
             return ServiceResult<TitoloStudioReadDTO>.Fail("Esiste già un TitoloStudio con questa denominazione.", 409);
         }
+        // /Blocco
 
-
-        var titStudio = await _context.TitoliStudio.FindAsync(id);
-        if (titStudio is null) {
-            return ServiceResult<TitoloStudioReadDTO>.Fail("TitoloStudio non trovato.", 404);
-        }
         titStudio.Denominazione = testoPulito;
         try {
             await _context.SaveChangesAsync();
             return ServiceResult<TitoloStudioReadDTO>.Ok(new TitoloStudioReadDTO {
                 Id = titStudio.Id,
                 Denominazione = titStudio.Denominazione
-            }, 201);
+            });
         }
         catch (DbUpdateException) {
             return ServiceResult<TitoloStudioReadDTO>.Fail("Impossibile salvare: il TitoloStudio è già presente.", 409);
@@ -92,7 +93,7 @@ public class TitoloStudioService : ITitoloStudioService {
     public async Task<ServiceResult<bool>> DeleteAsync(int id) {
         var titStudio = await _context.TitoliStudio.FindAsync(id);
         if (titStudio == null)
-            return ServiceResult<bool>.Fail("TitoloStudio non trovato.", 404);
+            return ServiceResult<bool>.Fail("TitoloStudio non trovato con quell'id.", 404);
 
         // Controllo di sicurezza: verifica se è stato usato
         bool isUsed = await _context.GestionePatti
@@ -106,7 +107,7 @@ public class TitoloStudioService : ITitoloStudioService {
             await _context.SaveChangesAsync();
             return ServiceResult<bool>.Ok(true);
         }
-        catch (Exception) {
+        catch (DbUpdateException) {
             return ServiceResult<bool>.Fail("Impossibile eliminare il TitoloStudio perchè collegato ad altri dati.", 409);
         }
     }

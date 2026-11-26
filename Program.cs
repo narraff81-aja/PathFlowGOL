@@ -34,9 +34,14 @@ builder.Services.AddScoped<ITitoloStudioService, TitoloStudioService>();
 // Configurazione dell'Autenticazione basata su Cookie
 builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options => {
+        options.Cookie.HttpOnly = true;
         options.LoginPath = "/api/auth/login"; // Rotta di reindirizzamento se non autorizzato
         options.ExpireTimeSpan = TimeSpan.FromHours(8); // Durata della sessione
         options.SlidingExpiration = true;
+        options.Events.OnRedirectToAccessDenied = context => {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
     });
 
 builder.Services.AddAuthorization();

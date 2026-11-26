@@ -35,9 +35,9 @@ public class CorsoCreateUpdateDTO {
     /// Ore del corso al netto del tirocinio
     /// </summary>
     [Required(ErrorMessage = "Le ore del corso sono obbligatorie")]
-    [Range(1, 1500, ErrorMessage = "Le ore del corso devono essere almeno 1.")]
+    [Range(1, 1500, ErrorMessage = "Le ore del corso devono essere tra 1 e 1.500.")]
     public int? OreCorso { get; set; }// <- reso nullable per verificare se è stato passato o meno
-    [Range(0, 1000)]
+    [Range(0, 1000, ErrorMessage = "Le ore di tirocinio devono essere tra 0 e 1.000 oppure 'null'.")]
     public int? OreTirocinio { get; set; }
     /// <summary>
     /// Titolo di studio minimo richiesto per accedere al corso

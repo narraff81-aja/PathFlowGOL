@@ -32,7 +32,7 @@ public class LavoroObiettivoService : ILavoroObiettivoService {
             .AsNoTracking()
             .FirstOrDefaultAsync(i => i.Id == id);
         if (lav is null) {
-            return ServiceResult<LavoroObiettivoReadDTO>.Fail("LavoroObiettivo non trovato.", 404);
+            return ServiceResult<LavoroObiettivoReadDTO>.Fail("LavoroObiettivo non trovato con quell'id.", 404);
         }
         return ServiceResult<LavoroObiettivoReadDTO>.Ok(new LavoroObiettivoReadDTO {
             Id = lav.Id,
@@ -76,6 +76,10 @@ public class LavoroObiettivoService : ILavoroObiettivoService {
         lav.Lavoro = lavoro;
         await _context.SaveChangesAsync();
         return true;*/
+        var lav = await _context.LavoriObiettivo.FindAsync(id);
+        if (lav is null) {
+            return ServiceResult<LavoroObiettivoReadDTO>.Fail("LavoroObiettivo non trovato con quell'id.", 404);
+        }
 
         // Blocco per mantenere UNIQUE
         var testoPulito = lavoro.Trim();
@@ -85,19 +89,15 @@ public class LavoroObiettivoService : ILavoroObiettivoService {
         if (esisteGia) {
             return ServiceResult<LavoroObiettivoReadDTO>.Fail("Esiste già un LavoroObiettivo con questa denominazione.", 409);
         }
+        // /Blocco
 
-
-        var lav = await _context.LavoriObiettivo.FindAsync(id);
-        if (lav is null) {
-            return ServiceResult<LavoroObiettivoReadDTO>.Fail("LavoroObiettivo non trovato.", 404);
-        }
         lav.Lavoro = testoPulito;
         try {
             await _context.SaveChangesAsync();
             return ServiceResult<LavoroObiettivoReadDTO>.Ok(new LavoroObiettivoReadDTO {
                 Id = lav.Id,
                 Lavoro = lav.Lavoro
-            }, 201);
+            });
         }
         catch (DbUpdateException) {
             return ServiceResult<LavoroObiettivoReadDTO>.Fail("Impossibile salvare: il LavoroObiettivo è già presente.", 409);
@@ -119,7 +119,7 @@ public class LavoroObiettivoService : ILavoroObiettivoService {
 
         var lav = await _context.LavoriObiettivo.FindAsync(id);
         if (lav == null)
-            return ServiceResult<bool>.Fail("LavoroObiettivo non trovato.", 404);
+            return ServiceResult<bool>.Fail("LavoroObiettivo non trovato con quell'id.", 404);
 
         // Controllo di sicurezza: verifica se è stato usato
         bool isUsed = await _context.GestionePatti
@@ -134,7 +134,7 @@ public class LavoroObiettivoService : ILavoroObiettivoService {
             await _context.SaveChangesAsync();
             return ServiceResult<bool>.Ok(true);
         }
-        catch (Exception) {
+        catch (DbUpdateException) {
             return ServiceResult<bool>.Fail("Impossibile eliminare il LavoroObiettivo perchè collegato ad altri dati.", 409);
         }
     }

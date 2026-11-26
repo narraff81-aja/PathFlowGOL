@@ -2,12 +2,12 @@
 
 **Descrizione:** Sistema gestionale backend sviluppato in **ASP.NET Core** per il supporto operativo agli **OMLS** (Operatori del Mercato del Lavoro e dei Servizi) nell'ambito del **Programma GOL** (*Garanzia di Occupabilità dei Lavoratori*).
 
-**Versione:** v0.2.0
+**Versione:** v0.2.1
 
 **Stato del progetto:** 
 * **Autenticazione e Gestione Sessione (`AuthController`):** Login tramite Cookie Authentication con emissione dei claim di ruolo, logout e invalidazione della sessione al cambio password.
-* **Tabelle di Lookup / Anagrafiche di Base:** Espozione degli endpoint REST (con relativi DTO e Service) per la gestione e consultazione delle tabelle di supporto (`TitoliStudio`, `TipiBenefici`, `LavoriObiettivo`, `StatiIntervento`).
-
+* **Tabelle di Lookup / Anagrafiche di Base:** Espozione degli endpoint REST (con relativi DTO e Service) per la gestione e consultazione delle tabelle di lookup.
+* **Affinamenti (v0.2.1):** Uniformate le risposte `GET` e `DELETE` dei controller ai payload REST/JSON, allineati gli status code HTTP (`200 OK` su `PUT`, `403 Forbidden` su accessi non autorizzati, `409 Conflict` su duplicati o record referenziati).
 
 ---
 
@@ -25,7 +25,7 @@ PathFlowGOL nasce per modellare e supportare i flussi operativi del Programma GO
 
 ---
 
-## Struttura del Repository (`v0.2.0`)
+## Struttura del Repository (`v0.2.1`)
 
 * `Models/` – Entità del dominio (`Utente`, `ProfiloOperatore`, `Cittadino`, `GestionePatto`, `Appuntamento`, `ChecklistDocumentale`, `FAQ`, `Logging` e tabelle di lookup)
 * `Data/` – `AppDbContext`, configurazioni Fluent API, indici univoci e `ValueConverter`

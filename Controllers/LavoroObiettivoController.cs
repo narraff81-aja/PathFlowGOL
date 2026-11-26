@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using PathFlowGOL.Models;
 using PathFlowGOL.Services;
 using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
 
 namespace PathFlowGOL.Controllers;
 
@@ -20,14 +19,22 @@ public class LavoroObiettivoController : ControllerBase {
     [HttpGet]
     public async Task<IActionResult> GetAll() {
         var lavori = await _service.GetAllAsync();
-        return Ok(lavori);
+        //return Ok(lavori);
+        if (!lavori.Successo)
+            return StatusCode(lavori.StatusCode, new { message = lavori.MsgErrore });
+
+        return Ok(lavori.Data);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id) {
         var lavoro = await _service.GetByIdAsync(id);
-        if (lavoro == null) return NotFound(new { message = "LavoroObiettivo non trovato." });
-        return Ok(lavoro);
+        /*if (lavoro == null) return NotFound(new { message = "LavoroObiettivo non trovato." });
+        return Ok(lavoro);*/
+        if (!lavoro.Successo)
+            return StatusCode(lavoro.StatusCode, new { message = lavoro.MsgErrore });
+
+        return Ok(lavoro.Data);
     }
 
     [HttpPost]
@@ -65,21 +72,11 @@ public class LavoroObiettivoController : ControllerBase {
         /*var (success, message) = await _service.DeleteAsync(id);
         if (!success) return BadRequest(new { message });
         return Ok(new { message });*/
-        if (!TryGetCurrentUser(out var ruolo)) {
-            return Unauthorized();
-        }
-
         var result = await _service.DeleteAsync(id);
         if (!result.Successo) {
             return StatusCode(result.StatusCode, new { message = result.MsgErrore });
         }
-        return Ok("LavoroObiettivo eliminato con successo.");
-    }
-
-    private bool TryGetCurrentUser(out RuoloUtente ruolo) {
-        ruolo = RuoloUtente.Operatore;
-        var roleClaim = User.FindFirstValue(ClaimTypes.Role);
-        return Enum.TryParse<RuoloUtente>(roleClaim, out ruolo);
+        return Ok(new { message = "LavoroObiettivo eliminato con successo." });
     }
 }
 

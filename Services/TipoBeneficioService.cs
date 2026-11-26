@@ -30,7 +30,7 @@ public class TipoBeneficioService : ITipoBeneficioService {
     .AsNoTracking()
     .FirstOrDefaultAsync(i => i.Id == id);
         if (benef is null) {
-            return ServiceResult<TipoBeneficioReadDTO>.Fail("TipoBeneficio non trovato.", 404);
+            return ServiceResult<TipoBeneficioReadDTO>.Fail("TipoBeneficio non trovato con quell'id.", 404);
         }
         return ServiceResult<TipoBeneficioReadDTO>.Ok(new TipoBeneficioReadDTO {
             Id = benef.Id,
@@ -62,6 +62,11 @@ public class TipoBeneficioService : ITipoBeneficioService {
     }
 
     public async Task<ServiceResult<TipoBeneficioReadDTO>> UpdateAsync(int id, string beneficio) {
+        var benef = await _context.TipiBenefici.FindAsync(id);
+        if (benef is null) {
+            return ServiceResult<TipoBeneficioReadDTO>.Fail("TipoBeneficio non trovato con quell'id.", 404);
+        }
+
         // Blocco per mantenere UNIQUE
         var testoPulito = beneficio.Trim();
         bool esisteGia = await _context.TipiBenefici
@@ -70,19 +75,15 @@ public class TipoBeneficioService : ITipoBeneficioService {
         if (esisteGia) {
             return ServiceResult<TipoBeneficioReadDTO>.Fail("Esiste già un TipoBeneficio con questa denominazione.", 409);
         }
+        // /Blocco
 
-
-        var benef = await _context.TipiBenefici.FindAsync(id);
-        if (benef is null) {
-            return ServiceResult<TipoBeneficioReadDTO>.Fail("TipoBeneficio non trovato.", 404);
-        }
         benef.Beneficio = testoPulito;
         try {
             await _context.SaveChangesAsync();
             return ServiceResult<TipoBeneficioReadDTO>.Ok(new TipoBeneficioReadDTO {
                 Id = benef.Id,
                 Beneficio = benef.Beneficio
-            }, 201);
+            });
         }
         catch (DbUpdateException) {
             return ServiceResult<TipoBeneficioReadDTO>.Fail("Impossibile salvare: il TipoBeneficio è già presente.", 409);
@@ -92,7 +93,7 @@ public class TipoBeneficioService : ITipoBeneficioService {
     public async Task<ServiceResult<bool>> DeleteAsync(int id) {
         var benef = await _context.TipiBenefici.FindAsync(id);
         if (benef == null)
-            return ServiceResult<bool>.Fail("TipoBeneficio non trovato.", 404);
+            return ServiceResult<bool>.Fail("TipoBeneficio non trovato con quell'id.", 404);
 
         // Controllo di sicurezza: verifica se è stato usato
         bool isUsed = await _context.GestionePatti
@@ -106,7 +107,7 @@ public class TipoBeneficioService : ITipoBeneficioService {
             await _context.SaveChangesAsync();
             return ServiceResult<bool>.Ok(true);
         }
-        catch (Exception) {
+        catch (DbUpdateException) {
             return ServiceResult<bool>.Fail("Impossibile eliminare il TipoBeneficio perchè collegato ad altri dati.", 409);
         }
     }

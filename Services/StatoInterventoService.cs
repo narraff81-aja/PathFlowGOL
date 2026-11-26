@@ -30,7 +30,7 @@ public class StatoInterventoService : IStatoInterventoService {
     .AsNoTracking()
     .FirstOrDefaultAsync(i => i.Id == id);
         if (statoInt is null) {
-            return ServiceResult<StatoInterventoReadDTO>.Fail("StatoIntervento non trovato.", 404);
+            return ServiceResult<StatoInterventoReadDTO>.Fail("StatoIntervento non trovato con quell'id.", 404);
         }
         return ServiceResult<StatoInterventoReadDTO>.Ok(new StatoInterventoReadDTO {
             Id = statoInt.Id,
@@ -62,6 +62,11 @@ public class StatoInterventoService : IStatoInterventoService {
     }
 
     public async Task<ServiceResult<StatoInterventoReadDTO>> UpdateAsync(int id, string stato) {
+        var statoInt = await _context.StatiIntervento.FindAsync(id);
+        if (statoInt is null) {
+            return ServiceResult<StatoInterventoReadDTO>.Fail("StatoIntervento non trovato con quell'id.", 404);
+        }
+
         // Blocco per mantenere UNIQUE
         var testoPulito = stato.Trim();
         bool esisteGia = await _context.StatiIntervento
@@ -70,19 +75,15 @@ public class StatoInterventoService : IStatoInterventoService {
         if (esisteGia) {
             return ServiceResult<StatoInterventoReadDTO>.Fail("Esiste già uno StatoIntervento con questa denominazione.", 409);
         }
+        // /Blocco
 
-
-        var statoInt = await _context.StatiIntervento.FindAsync(id);
-        if (statoInt is null) {
-            return ServiceResult<StatoInterventoReadDTO>.Fail("StatoIntervento non trovato.", 404);
-        }
         statoInt.Stato = testoPulito;
         try {
             await _context.SaveChangesAsync();
             return ServiceResult<StatoInterventoReadDTO>.Ok(new StatoInterventoReadDTO {
                 Id = statoInt.Id,
                 Stato = statoInt.Stato
-            }, 201);
+            });
         }
         catch (DbUpdateException) {
             return ServiceResult<StatoInterventoReadDTO>.Fail("Impossibile salvare: lo StatoIntervento è già presente.", 409);
@@ -92,7 +93,7 @@ public class StatoInterventoService : IStatoInterventoService {
     public async Task<ServiceResult<bool>> DeleteAsync(int id) {
         var statoInt = await _context.StatiIntervento.FindAsync(id);
         if (statoInt == null)
-            return ServiceResult<bool>.Fail("StatoIntervento non trovato.", 404);
+            return ServiceResult<bool>.Fail("StatoIntervento non trovato con quell'id.", 404);
 
         // Controllo di sicurezza: verifica se è stato usato
         bool isUsed = await _context.GestionePatti
@@ -106,7 +107,7 @@ public class StatoInterventoService : IStatoInterventoService {
             await _context.SaveChangesAsync();
             return ServiceResult<bool>.Ok(true);
         }
-        catch (Exception) {
+        catch (DbUpdateException) {
             return ServiceResult<bool>.Fail("Impossibile eliminare lo StatoIntervento perchè collegato ad altri dati.", 409);
         }
     }

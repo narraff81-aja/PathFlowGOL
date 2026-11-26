@@ -28,13 +28,13 @@ public class CorsoService : ICorsoService {
             .AsNoTracking()
             .FirstOrDefaultAsync(i => i.Id == id);
         if (corso is null) {
-            return ServiceResult<CorsoReadDTO>.Fail("Corso non trovato.", 404);
+            return ServiceResult<CorsoReadDTO>.Fail("Corso non trovato con quell'id.", 404);
         }
         return ServiceResult<CorsoReadDTO>.Ok(MapToReadDto(corso));
     }
 
     public async Task<ServiceResult<CorsoReadDTO>> CreateAsync(CorsoCreateUpdateDTO dto) {
-        var corso = new Corso {
+        /*var corso = new Corso {
             Denominazione = dto.Denominazione.Trim(),
             Settore = string.IsNullOrWhiteSpace(dto.Settore) ? null : dto.Settore.Trim(),
             Percorso = string.IsNullOrWhiteSpace(dto.Percorso) ? null : dto.Percorso.Trim(),
@@ -44,7 +44,9 @@ public class CorsoService : ICorsoService {
             TitoloStudioRichiesto = string.IsNullOrWhiteSpace(dto.TitoloStudioRichiesto) ? null : dto.TitoloStudioRichiesto.Trim(),
             RequisitoLingua = string.IsNullOrWhiteSpace(dto.RequisitoLingua) ? null : dto.RequisitoLingua.Trim(),
             TipologiaQualifica = string.IsNullOrWhiteSpace(dto.TipologiaQualifica) ? null : dto.TipologiaQualifica.Trim()
-        };
+        };*/
+        var corso = new Corso();
+        WriteDtoToMap(dto, corso);
 
         _context.Corsi.Add(corso);
         try {
@@ -61,9 +63,9 @@ public class CorsoService : ICorsoService {
         var corso = await _context.Corsi.FindAsync(id);
         //if (corso == null) return false;
         if (corso is null) {
-            return ServiceResult<CorsoReadDTO>.Fail("Corso non trovato.", 404);
+            return ServiceResult<CorsoReadDTO>.Fail("Corso non trovato con quell'id.", 404);
         }
-        corso.Denominazione = dto.Denominazione.Trim();
+        /*corso.Denominazione = dto.Denominazione.Trim();
         corso.Settore = string.IsNullOrWhiteSpace(dto.Settore) ? null : dto.Settore.Trim();
         corso.Percorso = string.IsNullOrWhiteSpace(dto.Percorso) ? null : dto.Percorso.Trim();
         corso.CodiceCorso = string.IsNullOrWhiteSpace(dto.CodiceCorso) ? null : dto.CodiceCorso.Trim();
@@ -72,10 +74,12 @@ public class CorsoService : ICorsoService {
         corso.TitoloStudioRichiesto = string.IsNullOrWhiteSpace(dto.TitoloStudioRichiesto) ? null : dto.TitoloStudioRichiesto.Trim();
         corso.RequisitoLingua = string.IsNullOrWhiteSpace(dto.RequisitoLingua) ? null : dto.RequisitoLingua.Trim();
         corso.TipologiaQualifica = string.IsNullOrWhiteSpace(dto.TipologiaQualifica) ? null : dto.TipologiaQualifica.Trim();
+        */
+        WriteDtoToMap(dto,corso);
 
         try {
             await _context.SaveChangesAsync();
-            return ServiceResult<CorsoReadDTO>.Ok(MapToReadDto(corso), 201);
+            return ServiceResult<CorsoReadDTO>.Ok(MapToReadDto(corso));
         }
         catch (DbUpdateException) {
             return ServiceResult<CorsoReadDTO>.Fail("Impossibile salvare il Corso perchè collegato ad altri dati.", 409);
@@ -87,7 +91,7 @@ public class CorsoService : ICorsoService {
         var corso = await _context.Corsi.FindAsync(id);
         //if (corso == null) return (false, "Corso non trovato.");
         if (corso is null) {
-            return ServiceResult<bool>.Fail("Corso non trovato.", 404);
+            return ServiceResult<bool>.Fail("Corso non trovato con quell'id.", 404);
         }
 
         // Controllo di sicurezza: verifica se è stato usato - NON ha collegamento diretto
@@ -97,7 +101,7 @@ public class CorsoService : ICorsoService {
             await _context.SaveChangesAsync();
             return ServiceResult<bool>.Ok(true);
         }
-        catch (Exception) {
+        catch (DbUpdateException) {
             return ServiceResult<bool>.Fail("Impossibile eliminare il Corso perchè collegato ad altri dati.", 409);
         }
         //return (true, "Corso eliminato con successo.");
@@ -114,5 +118,17 @@ public class CorsoService : ICorsoService {
         RequisitoLingua = c.RequisitoLingua,
         TipologiaQualifica = c.TipologiaQualifica,
     };
+
+    private static void WriteDtoToMap(CorsoCreateUpdateDTO dto,Corso c) {
+        c.Denominazione = dto.Denominazione.Trim();
+        c.Settore = string.IsNullOrWhiteSpace(dto.Settore) ? null : dto.Settore.Trim();
+        c.Percorso = string.IsNullOrWhiteSpace(dto.Percorso) ? null : dto.Percorso.Trim();
+        c.CodiceCorso = string.IsNullOrWhiteSpace(dto.CodiceCorso) ? null : dto.CodiceCorso.Trim();
+        c.OreCorso = dto.OreCorso == null || dto.OreCorso.Value < 1 ? 1 : dto.OreCorso.Value;
+        c.OreTirocinio = dto.OreTirocinio;
+        c.TitoloStudioRichiesto = string.IsNullOrWhiteSpace(dto.TitoloStudioRichiesto) ? null : dto.TitoloStudioRichiesto.Trim();
+        c.RequisitoLingua = string.IsNullOrWhiteSpace(dto.RequisitoLingua) ? null : dto.RequisitoLingua.Trim();
+        c.TipologiaQualifica = string.IsNullOrWhiteSpace(dto.TipologiaQualifica) ? null : dto.TipologiaQualifica.Trim();
+    }
 }
 

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using PathFlowGOL.Models;
 using PathFlowGOL.Services;
 using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
 
 namespace PathFlowGOL.Controllers;
 
@@ -20,23 +19,24 @@ public class TitoloStudioController : ControllerBase {
     [HttpGet]
     public async Task<IActionResult> GetAll() {
         var titoliStudio = await _service.GetAllAsync();
-        return Ok(titoliStudio);
+        if (!titoliStudio.Successo)
+            return StatusCode(titoliStudio.StatusCode, new { message = titoliStudio.MsgErrore });
+
+        return Ok(titoliStudio.Data);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id) {
         var titoloStudio = await _service.GetByIdAsync(id);
-        if (titoloStudio == null) return NotFound(new { message = "TitoloStudio non trovato." });
-        return Ok(titoloStudio);
+        if (!titoloStudio.Successo)
+            return StatusCode(titoloStudio.StatusCode, new { message = titoloStudio.MsgErrore });
+
+        return Ok(titoloStudio.Data);
     }
 
     [HttpPost]
     [Authorize(Roles = $"{nameof(RuoloUtente.SuperAdmin)},{nameof(RuoloUtente.Admin)}")] // Solo Admin e SuperAdmin possono scrivere
     public async Task<IActionResult> Create([FromBody, Required, MaxLength(70)] string denominazione) {
-        if (!TryGetCurrentUser(out var ruolo)) {
-            return Unauthorized();
-        }
-
         if (string.IsNullOrWhiteSpace(denominazione))
             return BadRequest(new { message = "La denominazione del Titolo di Studio non può essere vuota." });
 
@@ -50,10 +50,6 @@ public class TitoloStudioController : ControllerBase {
     [HttpPut("{id}")]
     [Authorize(Roles = $"{nameof(RuoloUtente.SuperAdmin)},{nameof(RuoloUtente.Admin)}")]
     public async Task<IActionResult> Update(int id, [FromBody, Required, MaxLength(70)] string denominazione) {
-        if (!TryGetCurrentUser(out var ruolo)) {
-            return Unauthorized();
-        }
-
         if (string.IsNullOrWhiteSpace(denominazione))
             return BadRequest(new { message = "La denominazione del Titolo di Studio non può essere vuota." });
 
@@ -66,21 +62,11 @@ public class TitoloStudioController : ControllerBase {
     [HttpDelete("{id}")]
     [Authorize(Roles = $"{nameof(RuoloUtente.SuperAdmin)},{nameof(RuoloUtente.Admin)}")]
     public async Task<IActionResult> Delete(int id) {
-        if (!TryGetCurrentUser(out var ruolo)) {
-            return Unauthorized();
-        }
-
         var result = await _service.DeleteAsync(id);
         if (!result.Successo) {
             return StatusCode(result.StatusCode, new { message = result.MsgErrore });
         }
-        return Ok("TitoloStudio eliminato con successo.");
-    }
-
-    private bool TryGetCurrentUser(out RuoloUtente ruolo) {
-        ruolo = RuoloUtente.Operatore;
-        var roleClaim = User.FindFirstValue(ClaimTypes.Role);
-        return Enum.TryParse<RuoloUtente>(roleClaim, out ruolo);
+        return Ok(new { message = "TitoloStudio eliminato con successo." });
     }
 }
 

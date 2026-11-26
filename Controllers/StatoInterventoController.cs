@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using PathFlowGOL.Models;
 using PathFlowGOL.Services;
 using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
 
 namespace PathFlowGOL.Controllers;
 
@@ -20,23 +19,24 @@ public class StatoInterventoController : ControllerBase {
     [HttpGet]
     public async Task<IActionResult> GetAll() {
         var statiInt = await _service.GetAllAsync();
-        return Ok(statiInt);
+        if (!statiInt.Successo)
+            return StatusCode(statiInt.StatusCode, new { message = statiInt.MsgErrore });
+
+        return Ok(statiInt.Data);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id) {
         var statoInt = await _service.GetByIdAsync(id);
-        if (statoInt == null) return NotFound(new { message = "StatoIntervento non trovato." });
-        return Ok(statoInt);
+        if (!statoInt.Successo)
+            return StatusCode(statoInt.StatusCode, new { message = statoInt.MsgErrore });
+
+        return Ok(statoInt.Data);
     }
 
     [HttpPost]
     [Authorize(Roles = $"{nameof(RuoloUtente.SuperAdmin)},{nameof(RuoloUtente.Admin)}")] // Solo Admin e SuperAdmin possono scrivere
     public async Task<IActionResult> Create([FromBody, Required, MaxLength(50)] string stato) {
-        if (!TryGetCurrentUser(out var ruolo)) {
-            return Unauthorized();
-        }
-
         if (string.IsNullOrWhiteSpace(stato))
             return BadRequest(new { message = "Lo stato dell'intervento non può essere vuoto." });
 
@@ -50,10 +50,6 @@ public class StatoInterventoController : ControllerBase {
     [HttpPut("{id}")]
     [Authorize(Roles = $"{nameof(RuoloUtente.SuperAdmin)},{nameof(RuoloUtente.Admin)}")]
     public async Task<IActionResult> Update(int id, [FromBody, Required, MaxLength(50)] string stato) {
-        if (!TryGetCurrentUser(out var ruolo)) {
-            return Unauthorized();
-        }
-
         if (string.IsNullOrWhiteSpace(stato))
             return BadRequest(new { message = "Lo stato dell'intervento non può essere vuoto." });
 
@@ -66,21 +62,11 @@ public class StatoInterventoController : ControllerBase {
     [HttpDelete("{id}")]
     [Authorize(Roles = $"{nameof(RuoloUtente.SuperAdmin)},{nameof(RuoloUtente.Admin)}")]
     public async Task<IActionResult> Delete(int id) {
-        if (!TryGetCurrentUser(out var ruolo)) {
-            return Unauthorized();
-        }
-
         var result = await _service.DeleteAsync(id);
         if (!result.Successo) {
             return StatusCode(result.StatusCode, new { message = result.MsgErrore });
         }
-        return Ok("StatoIntervento eliminato con successo.");
-    }
-
-    private bool TryGetCurrentUser(out RuoloUtente ruolo) {
-        ruolo = RuoloUtente.Operatore;
-        var roleClaim = User.FindFirstValue(ClaimTypes.Role);
-        return Enum.TryParse<RuoloUtente>(roleClaim, out ruolo);
+        return Ok(new { message = "StatoIntervento eliminato con successo." });
     }
 }
 
